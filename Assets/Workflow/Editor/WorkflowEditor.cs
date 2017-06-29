@@ -3,8 +3,12 @@ using UnityEditor;
 
 namespace Workstation
 {
-	public static class WorkflowEditor
+	public class WorkflowEditor : EditorWindow
 	{
-
+		[MenuItem("Tools/GC Collect")]
+		public static void GCCollect()
+		{
+			System.GC.Collect();
+		}
 	}
 }

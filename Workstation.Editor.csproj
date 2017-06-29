@@ -131,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Workflow\Editor\CodeGenerator_Window.cs" />
+    <Compile Include="Assets\Workflow\Editor\GCEditor.cs" />
     <Compile Include="Assets\Workflow\Editor\TagsLayersScenesBuilder.cs" />
     <Compile Include="Assets\Workflow\Editor\WorkflowEditor.cs" />
   </ItemGroup>
