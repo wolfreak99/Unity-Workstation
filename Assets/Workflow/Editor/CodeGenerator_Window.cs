@@ -22,6 +22,14 @@ public class CodeGenerator_Window : EditorWindow
 	private string layersPath = @"Standard Assets/Scripts/Auto/Layers.cs";
 	private string scenesPath = @"Standard Assets/Scripts/Auto/Scenes.cs";
 
+	private const int SELECTION_FLAG_AXES = 1 << 0,
+		SELECTION_FLAG_TAGS = 1 << 1,
+		SELECTION_FLAG_SORTING_LAYERS = 1 << 2,
+		SELECTION_FLAG_LAYERS = 1 << 3,
+		SELECTION_FLAG_SCENES = 1 << 4;
+
+	private int m_selectionFlag;
+
 	[MenuItem("Window/Code Generator")]
 	private static void CallCreateWindow()
 	{
@@ -29,7 +37,15 @@ public class CodeGenerator_Window : EditorWindow
 		CodeGenerator_Window window = EditorWindow.GetWindow<CodeGenerator_Window>();
 		window.autoRepaintOnSceneChange = true;
 		window.titleContent = new GUIContent("Code Generator");
+		window.Load();
 		window.Show();
+	}
+
+	private void Load()
+	{
+		// Activate all the options
+		m_selectionFlag = SELECTION_FLAG_AXES | SELECTION_FLAG_LAYERS | 
+			SELECTION_FLAG_SCENES | SELECTION_FLAG_SORTING_LAYERS | SELECTION_FLAG_TAGS;
 	}
 
 	private void OnInspectorUpdate()
@@ -39,32 +55,30 @@ public class CodeGenerator_Window : EditorWindow
 
 	private void OnGUI()
 	{
-		if (DrawGenerationGui("Input", ref this.axesPath)) {
-			Generate(this.axesPath, GetAllAxisNames);
-		}
+		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_AXES, "Input", ref this.axesPath);
 		EditorGUILayout.Separator();
-		if (DrawGenerationGui("Tags", ref this.tagsPath)) {
-			Generate(this.tagsPath, GetAllTags);
-		}
+		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_TAGS, "Tags", ref this.tagsPath);
 		EditorGUILayout.Separator();
-		if (DrawGenerationGui("Sorting layers", ref this.sortingLayersPath)) {
-			Generate(this.sortingLayersPath, GetAllSortingLayers);
-		}
+		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_SORTING_LAYERS, "Sorting layers", ref this.sortingLayersPath);
 		EditorGUILayout.Separator();
-		if (DrawGenerationGui("Layers", ref this.layersPath)) {
-			Generate(this.layersPath, GetAllLayers);
-		}
+		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_LAYERS, "Layers", ref this.layersPath);
 		EditorGUILayout.Separator();
-		if (DrawGenerationGui("Scenes", ref this.scenesPath)) {
-			Generate(this.scenesPath, GetAllSceneNames);
-		}
+		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_SCENES, "Scenes", ref this.scenesPath);
 		EditorGUILayout.Separator();
-		if (GUILayout.Button("Generate all", GUILayoutExt.ExpandHeight)) {
-			Generate(this.axesPath, GetAllAxisNames);
-			Generate(this.tagsPath, GetAllTags);
-			Generate(this.sortingLayersPath, GetAllSortingLayers);
-			Generate(this.layersPath, GetAllLayers);
-			Generate(this.scenesPath, GetAllSceneNames);
+
+		using (new EditorGUI.DisabledGroupScope(m_selectionFlag == 0)) {
+			if (GUILayout.Button("Generate", GUILayoutExt.ExpandHeight)) {
+				if ((m_selectionFlag & SELECTION_FLAG_AXES) == SELECTION_FLAG_AXES)
+					Generate(this.axesPath, GetAllAxesNames);
+				if ((m_selectionFlag & SELECTION_FLAG_TAGS) == SELECTION_FLAG_TAGS)
+					Generate(this.tagsPath, GetAllTags);
+				if ((m_selectionFlag & SELECTION_FLAG_SORTING_LAYERS) == SELECTION_FLAG_SORTING_LAYERS)
+					Generate(this.sortingLayersPath, GetAllSortingLayers);
+				if ((m_selectionFlag & SELECTION_FLAG_LAYERS) == SELECTION_FLAG_LAYERS)
+					Generate(this.layersPath, GetAllLayers);
+				if ((m_selectionFlag & SELECTION_FLAG_SCENES) == SELECTION_FLAG_SCENES)
+					Generate(this.scenesPath, GetAllSceneNames);
+			}
 		}
 	}
 
@@ -78,28 +92,23 @@ public class CodeGenerator_Window : EditorWindow
 			Debug.LogException(ex);
 		}
 	}
-
-	private static bool DrawGenerationGui(string title, ref string path)
+	
+	private static void DrawGenerationGui(ref int selectionFlag, int select, string title, ref string path)
 	{
-		bool output = false;
-		using (new EditorGUILayout.VerticalScope(EditorStyles.inspectorFullWidthMargins)) {
-			EditorGUILayout.LabelField(title, EditorStyles.boldLabel, GUILayout.MaxWidth(100), GUILayoutExt.NoExpandWidth);
+		using (new GUILayout.VerticalScope(EditorStyles.inspectorDefaultMargins)) {
 			using (new EditorGUILayout.HorizontalScope()) {
-				EditorGUILayout.LabelField(@"Path: /Assets/... + ", GUILayout.MaxWidth(120), GUILayoutExt.NoExpandWidth);
-				path = EditorGUILayout.TextField(path, EditorStyles.textField, GUILayoutExt.ExpandWidth, GUILayout.MinWidth(200));
-			}
-
-			using (new EditorGUILayout.HorizontalScope()) {
-				GUILayout.FlexibleSpace();
-				if (GUILayout.Button("Generate", EditorStyles.miniButton)) {
-					output = true;
+				bool prevEnabled = (selectionFlag & select) == select;
+				bool enabled = EditorGUILayout.Toggle(prevEnabled, GUILayout.Width(15));
+				if (enabled != prevEnabled) {
+					selectionFlag ^= select;
 				}
-				GUILayout.FlexibleSpace();
+				using (new EditorGUI.DisabledGroupScope(!enabled)) {
+					EditorGUILayout.LabelField(new GUIContent(title, title), EditorStyles.boldLabel, GUILayout.MaxWidth(100), GUILayoutExt.NoExpandWidth);
+					EditorGUILayout.LabelField(@"Path: /Assets/", GUILayout.MaxWidth(90), GUILayoutExt.NoExpandWidth);
+					path = EditorGUILayout.TextField(path, EditorStyles.textField, GUILayout.MinWidth(200), GUILayoutExt.ExpandWidth);
+				}
 			}
-
 		}
-
-		return output;
 	}
 
 	#region code generation
@@ -211,7 +220,7 @@ public class CodeGenerator_Window : EditorWindow
 	#endregion
 	
 	#region names providers
-	private static IEnumerable<string> GetAllAxisNames()
+	private static IEnumerable<string> GetAllAxesNames()
 	{
 		var result = new StringCollection();
 
