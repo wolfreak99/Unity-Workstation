@@ -26,7 +26,7 @@ public class CodeGenerator_Window : EditorWindow
 	private static void CallCreateWindow()
 	{
 		// Get existing open window or if none, make a new one:
-		CodeGenerator_Window window = (CodeGenerator_Window)EditorWindow.GetWindow(typeof(CodeGenerator_Window));
+		CodeGenerator_Window window = EditorWindow.GetWindow<CodeGenerator_Window>();
 		window.autoRepaintOnSceneChange = true;
 		window.titleContent = new GUIContent("Code Generator");
 		window.Show();
@@ -67,6 +67,7 @@ public class CodeGenerator_Window : EditorWindow
 			Generate(this.scenesPath, GetAllSceneNames);
 		}
 	}
+
 	private static void Generate(string path, System.Func<IEnumerable<string>> namesProvider)
 	{
 		try {
@@ -77,6 +78,7 @@ public class CodeGenerator_Window : EditorWindow
 			Debug.LogException(ex);
 		}
 	}
+
 	private static bool DrawGenerationGui(string title, ref string path)
 	{
 		bool output = false;
@@ -125,6 +127,7 @@ public class CodeGenerator_Window : EditorWindow
 		var code = CreateStringConstantsClass(name, constants);
 
 		Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+
 		using (var stream = new StreamWriter(fullPath, append: false)) {
 			var tw = new IndentedTextWriter(stream);
 			var codeProvider = new CSharpCodeProvider();
@@ -147,10 +150,7 @@ public class CodeGenerator_Window : EditorWindow
 		ImitateStaticClass(@class);
 
 		foreach (var pair in constants) {
-			var @const = new CodeMemberField(
-				typeof(string),
-				pair.Key
-			);
+			var @const = new CodeMemberField(typeof(string), pair.Key);
 			@const.Attributes &= ~MemberAttributes.AccessMask;
 			@const.Attributes &= ~MemberAttributes.ScopeMask;
 			@const.Attributes |= MemberAttributes.Public;
@@ -237,8 +237,8 @@ public class CodeGenerator_Window : EditorWindow
 
 	private static IEnumerable<string> GetAllSortingLayers()
 	{
-		var internalEditorUtilityType = typeof(InternalEditorUtility);
-		var sortingLayersProperty = internalEditorUtilityType.GetProperty("sortingLayerNames", BindingFlags.Static | BindingFlags.NonPublic);
+		var t = typeof(InternalEditorUtility);
+		var sortingLayersProperty = t.GetProperty("sortingLayerNames", BindingFlags.Static | BindingFlags.NonPublic);
 		var sortingLayers = (string[])sortingLayersProperty.GetValue(null, new object[0]);
 
 		return new ReadOnlyCollection<string>(sortingLayers);
@@ -251,11 +251,7 @@ public class CodeGenerator_Window : EditorWindow
 
 	private static IEnumerable<string> GetAllSceneNames()
 	{
-		var scenes = EditorBuildSettings.scenes;
-		string[] sceneNames = new string[scenes.Length];
-		for (int n = 0; n < sceneNames.Length; n++) {
-			sceneNames[n] = System.IO.Path.GetFileNameWithoutExtension(scenes[n].path);
-		}
+		var sceneNames = EditorBuildSettings.scenes.Select(s => Path.GetFileNameWithoutExtension(s.path)).ToList();
 
 		return new ReadOnlyCollection<string>(sceneNames);
 	}
