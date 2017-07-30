@@ -16,11 +16,12 @@ using UnityEngine;
 
 public class CodeGenerator_Window : EditorWindow
 {
-	private string axesPath = @"Standard Assets/Scripts/Auto/Axes.cs";
-	private string tagsPath = @"Standard Assets/Scripts/Auto/Tags.cs";
-	private string sortingLayersPath = @"Standard Assets/Scripts/Auto/SortingLayers.cs";
-	private string layersPath = @"Standard Assets/Scripts/Auto/Layers.cs";
-	private string scenesPath = @"Standard Assets/Scripts/Auto/Scenes.cs";
+	private string folderPath = @"Standard Assets/Scripts/Auto/";
+	private string axesPath = @"Axes.cs";
+	private string tagsPath = @"Tags.cs";
+	private string sortingLayersPath = @"SortingLayers.cs";
+	private string layersPath = @"Layers.cs";
+	private string scenesPath = @"Scenes.cs";
 
 	private const int SELECTION_FLAG_AXES = 1 << 0,
 		SELECTION_FLAG_TAGS = 1 << 1,
@@ -55,29 +56,37 @@ public class CodeGenerator_Window : EditorWindow
 
 	private void OnGUI()
 	{
+		using (new GUILayout.VerticalScope(EditorStyles.inspectorDefaultMargins)) {
+			EditorGUILayout.LabelField(new GUIContent("Folder Path", "Folder Path"), EditorStyles.boldLabel, 
+			                           GUILayout.MaxWidth(100), GUILayoutExt.NoExpandWidth);
+
+			using (new EditorGUILayout.HorizontalScope()) {
+				GUILayout.Space(19);
+				EditorGUILayout.LabelField(@"../Assets/", GUILayout.MaxWidth(60), GUILayoutExt.NoExpandWidth);
+				folderPath = EditorGUILayout.TextField(folderPath, EditorStyles.textField, 
+				                                       GUILayout.MinWidth(200), GUILayoutExt.ExpandWidth);
+			}
+		}
+		EditorGUILayout.Separator();
+
 		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_AXES, "Input", ref this.axesPath);
-		EditorGUILayout.Separator();
 		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_TAGS, "Tags", ref this.tagsPath);
-		EditorGUILayout.Separator();
 		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_SORTING_LAYERS, "Sorting layers", ref this.sortingLayersPath);
-		EditorGUILayout.Separator();
 		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_LAYERS, "Layers", ref this.layersPath);
-		EditorGUILayout.Separator();
 		DrawGenerationGui(ref m_selectionFlag, SELECTION_FLAG_SCENES, "Scenes", ref this.scenesPath);
-		EditorGUILayout.Separator();
 
 		using (new EditorGUI.DisabledGroupScope(m_selectionFlag == 0)) {
 			if (GUILayout.Button("Generate", GUILayoutExt.ExpandHeight)) {
 				if ((m_selectionFlag & SELECTION_FLAG_AXES) == SELECTION_FLAG_AXES)
-					Generate(this.axesPath, GetAllAxesNames);
+					Generate(Path.Combine(this.folderPath, this.axesPath), GetAllAxesNames);
 				if ((m_selectionFlag & SELECTION_FLAG_TAGS) == SELECTION_FLAG_TAGS)
-					Generate(this.tagsPath, GetAllTags);
+					Generate(Path.Combine(this.folderPath, this.tagsPath), GetAllTags);
 				if ((m_selectionFlag & SELECTION_FLAG_SORTING_LAYERS) == SELECTION_FLAG_SORTING_LAYERS)
-					Generate(this.sortingLayersPath, GetAllSortingLayers);
+					Generate(Path.Combine(this.folderPath, this.sortingLayersPath), GetAllSortingLayers);
 				if ((m_selectionFlag & SELECTION_FLAG_LAYERS) == SELECTION_FLAG_LAYERS)
-					Generate(this.layersPath, GetAllLayers);
+					Generate(Path.Combine(this.folderPath, this.layersPath), GetAllLayers);
 				if ((m_selectionFlag & SELECTION_FLAG_SCENES) == SELECTION_FLAG_SCENES)
-					Generate(this.scenesPath, GetAllSceneNames);
+					Generate(Path.Combine(this.folderPath, this.scenesPath), GetAllSceneNames);
 			}
 		}
 	}
@@ -104,11 +113,12 @@ public class CodeGenerator_Window : EditorWindow
 				}
 				using (new EditorGUI.DisabledGroupScope(!enabled)) {
 					EditorGUILayout.LabelField(new GUIContent(title, title), EditorStyles.boldLabel, GUILayout.MaxWidth(100), GUILayoutExt.NoExpandWidth);
-					EditorGUILayout.LabelField(@"Path: /Assets/", GUILayout.MaxWidth(90), GUILayoutExt.NoExpandWidth);
+					EditorGUILayout.LabelField(@"Filename: ", GUILayout.MaxWidth(60), GUILayoutExt.NoExpandWidth);
 					path = EditorGUILayout.TextField(path, EditorStyles.textField, GUILayout.MinWidth(200), GUILayoutExt.ExpandWidth);
 				}
 			}
 		}
+		EditorGUILayout.Separator();
 	}
 
 	#region code generation
