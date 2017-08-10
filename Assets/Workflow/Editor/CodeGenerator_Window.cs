@@ -157,9 +157,7 @@ public class CodeGenerator_Window : EditorWindow
 		}
 	}
 
-	private static CodeCompileUnit CreateStringConstantsClass(
-		string name,
-		IDictionary<string, string> constants)
+	private static CodeCompileUnit CreateStringConstantsClass(string name, IDictionary<string, string> constants)
 	{
 		var compileUnit = new CodeCompileUnit();
 		var @namespace = new CodeNamespace();
