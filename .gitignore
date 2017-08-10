@@ -36,5 +36,9 @@ sysinfo.txt
 # Extra
 /Temp/
 /Library/
-/Library/ScriptAssemblies/
+/Library/ScriptAssemblies/*
 /Library/assetDatabase*
+
+# Extra stuff I personally don't feel need to be saved.
+# Right now, I'm just backing up my scripts only.
+*.meta
